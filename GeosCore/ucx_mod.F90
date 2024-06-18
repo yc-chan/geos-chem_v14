@@ -3837,6 +3837,9 @@ CONTAINS
     ! Allow for the possibility of variable timestep
     DTCHEM = GET_TS_CHEM()
 
+    ! Initialize
+    PHOTDELTA = 1.e+0_fp
+    
     !$OMP PARALLEL DO       &
     !$OMP DEFAULT( SHARED ) &
     !$OMP PRIVATE( I, J, L, DAYCOLUMN, GMU ) &
