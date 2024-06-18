@@ -40,6 +40,7 @@ MODULE FullChem_Mod
   INTEGER               :: id_PCO, id_LCH4, id_NH3,  id_SO4
   INTEGER               :: id_SALAAL, id_SALCAL, id_SALC, id_SALA
   INTEGER               :: id_PSO4
+  INTEGER               :: id_O3, id_N ! ewl debug
 #ifdef TOMAS
   INTEGER               :: id_NK05, id_NK08, id_NK10, id_NK20
 #endif
@@ -224,6 +225,10 @@ CONTAINS
     REAL(dp)               :: ScaleCESMLossRate
 #endif
 
+    ! ewl debug
+    INTEGER :: N_O3, N_O1D, N_N
+    REAL(f8) :: spcconcbefore
+    
     ! Grid box integration time diagnostic
     REAL(fp)               :: TimeStart, TimeEnd
 
@@ -262,6 +267,11 @@ CONTAINS
     ! Print information the first time that DO_FULLCHEM is called
     CALL PrintFirstTimeInfo( Input_Opt, State_Chm, FirstChem )
 
+    ! ewl debug
+    if (input_opt%amIRoot ) then
+       print *, "ewl do_fullchem, A: O1D(1,1,1) : ", State_Chm%Species(id_O1D)%Conc(1,1,1)
+    endif
+    
     ! Zero diagnostic archival arrays to make sure that we don't have any
     ! leftover values from the last timestep near the top of the chemgrid
     IF (State_Diag%Archive_Loss           ) State_Diag%Loss           = 0.0_f4
@@ -359,6 +369,11 @@ CONTAINS
 
     ENDDO
 
+    ! ewl debug
+    if (input_opt%amIRoot ) then
+       print *, "ewl do_fullchem, B: O1D(1,1,1) : ", State_Chm%Species(id_O1D)%Conc(1,1,1)
+    endif
+    
     !========================================================================
     ! Convert species to [molec/cm3] (ewl, 8/16/16)
     !========================================================================
@@ -376,6 +391,13 @@ CONTAINS
        CALL GC_Error( ErrMsg, RC, 'fullchem_mod.F90')
        RETURN
     ENDIF
+
+
+    ! ewl debug
+    if (input_opt%amIRoot ) then
+       print *, "ewl do_fullchem, C: O1D(1,1,1) : ", State_Chm%Species(id_O1D)%Conc(1,1,1)
+    endif
+    
 
     !========================================================================
     ! Call photolysis routine to compute J-Values
@@ -396,6 +418,13 @@ CONTAINS
        ENDIF
     ENDIF
 
+    ! ewl debug
+    if (input_opt%amIRoot ) then
+       print *, "ewl do_fullchem, D: O1D(1,1,1) : ", State_Chm%Species(id_O1D)%Conc(1,1,1)
+    endif
+    
+
+    
     !### Debug
     IF ( Input_Opt%Verbose ) THEN
        CALL DEBUG_MSG( '### Do_FullChem: after computing J-values' )
@@ -495,6 +524,13 @@ CONTAINS
        ENDIF
     ENDIF
 
+    ! ewl debug
+    if (input_opt%amIRoot ) then
+       print *, "ewl do_fullchem, E: O1D(1,1,1) : ", State_Chm%Species(id_O1D)%Conc(1,1,1)
+    endif
+    
+
+    
     !========================================================================
     ! MAIN LOOP: Compute reaction rates and call chemical solver
     !
@@ -513,7 +549,7 @@ CONTAINS
     !$OMP PRIVATE( SpcID,    KppID,    F,       P,         Vloc             )&
     !$OMP PRIVATE( Aout,     Thread,   RC,      S,         LCH4             )&
     !$OMP PRIVATE( OHreact,  PCO_TOT,  PCO_CH4, PCO_NMVOC, SR               )&
-    !$OMP PRIVATE( SIZE_RES, LWC                                            )&
+    !$OMP PRIVATE( SIZE_RES, LWC, N, spcconcbefore                                 )&
 #ifdef MODEL_GEOS
     !$OMP PRIVATE( NOxTau,     NOxConc, NOx_weight, NOx_tau_weighted        )&
 #endif
@@ -569,6 +605,12 @@ CONTAINS
           call cpu_time(TimeStart)
        ENDIF
 
+       ! ewl debug
+       if (input_opt%amIRoot .and. (I == 1).and.(J==1).and.(L ==1) ) then
+          print *, "ewl do_fullchem, F1: O1D(1,1,1) : ", State_Chm%Species(id_O1D)%Conc(1,1,1)
+       endif
+
+       
        !=====================================================================
        ! Get photolysis rates (daytime only)
        !
@@ -591,7 +633,7 @@ CONTAINS
        ! (update submitted by E. Fleming (NASA), 10/11/2018)
        !=====================================================================
        IF ( State_Met%SUNCOSmid(I,J) > -0.1391731e+0_fp ) THEN
-
+          
           ! Only proceed if doing photolysis
           IF ( Input_Opt%Do_Photolysis ) THEN
 
@@ -716,6 +758,12 @@ CONTAINS
 
        ENDIF
 
+       ! ewl debug
+       if (input_opt%amIRoot .and. (I == 1).and.(J==1).and.(L==1) ) then
+          print *, "ewl do_fullchem, F2: O1D(1,1,1) : ", State_Chm%Species(id_O1D)%Conc(1,1,1)
+       endif
+
+       
 #if defined( MODEL_CESM )
        !=====================================================================
        ! Unphysical fix: Photolyze soluble aerosol tracers
@@ -762,6 +810,12 @@ CONTAINS
 
 #endif
 
+       ! ewl debug
+       if (input_opt%amIRoot .and. (I == 1).and.(J==1).and.(L==1) ) then
+          print *, "ewl do_fullchem, F3: O1D(1,1,1) : ", State_Chm%Species(id_O1D)%Conc(1,1,1)
+       endif
+
+        
        !=====================================================================
        ! Test if we need to do the chemistry for box (I,J,L),
        ! otherwise move onto the next box.
@@ -781,10 +835,18 @@ CONTAINS
        !=====================================================================
        ! Initialize the KPP "C" vector of species concentrations [molec/cm3]
        !=====================================================================
+       N_O3 = 0
        DO N = 1, NSPEC
           SpcID = State_Chm%Map_KppSpc(N)
           C(N)  = 0.0_dp
           IF ( SpcId > 0 ) C(N) = State_Chm%Species(SpcID)%Conc(I,J,L)
+
+          ! ewl debug
+          if (input_opt%amIRoot .and. (SpcID==id_O1D).and.(I == 1).and.(J==1).and.(L==1)) then
+             print *, "ewl do_fullchem, F4: C(N), N for O1D: ", C(N), N
+             N_O1D = N
+          endif
+
        ENDDO
 
        !=====================================================================
@@ -810,6 +872,12 @@ CONTAINS
                                     State_Met  = State_Met,                  &
                                     RC         = RC                         )
 
+       ! ewl debug
+       if (input_opt%amIRoot .and. (I == 1).and.(J==1).and.(L==1) ) then
+          print *, "ewl do_fullchem, F5: O1D(1,1,1) : ", State_Chm%Species(id_O1D)%Conc(1,1,1)
+       endif
+
+       
        !=====================================================================
        ! CHEMISTRY MECHANISM INITIALIZATION (#2)
        !
@@ -985,6 +1053,13 @@ CONTAINS
        ! let us reset concentrations before calling "Integrate" a 2nd time.
        C_before_integrate = C
 
+       ! ewl debug
+       if (input_opt%amIRoot .and. (I == 1).and.(J==1).and.(L==1) ) then
+          print *, "ewl do_fullchem, F7: C_before_integration is C(N_O1D): ", C(N_O1D)
+       endif
+
+
+       
        ! Call the Rosenbrock integrator
        ! (with optional auto-reduce functionality)
        CALL Integrate( TIN,    TOUT,    ICNTRL,                              &
@@ -1029,6 +1104,13 @@ CONTAINS
        ENDIF
 #endif
 
+       ! ewl debug
+       if (input_opt%amIRoot .and. (I == 1).and.(J==1).and.(L==1) ) then
+          print *, "ewl do_fullchem, F8: C(N_O1D): ", C(N_O1D)
+       endif
+
+
+       
        !=====================================================================
        ! HISTORY: Archive KPP solver diagnostics
        !
@@ -1098,6 +1180,12 @@ CONTAINS
           RCNTRL(3) = 0.0_dp
           C         = C_before_integrate
 
+       ! ewl debug
+       if (input_opt%amIRoot .and. (I == 1).and.(J==1).and.(L==1) ) then
+          print *, "ewl do_fullchem, F9: trying another time, C(N_O1D): ", C(N_O1D)
+       endif
+
+          
 #if defined( MODEL_GEOS )
           ! In GEOS also inflate the error tolerances (cakelle2, 2023/10/26)
           ATOL = 1.0e-2_dp * Input_Opt%KppTolScale
@@ -1188,6 +1276,12 @@ CONTAINS
              ELSE
                 ! Revert to concentrations prior to 1st call to "Integrate"
                 C = C_before_integrate
+
+                ! ewl debug
+                if (input_opt%amIRoot .and. (I == 1).and.(J==1).and.(L==1) ) then
+                   print *, "ewl do_fullchem, F10: reverting, C(N_O1D): ", C(N_O1D)
+                endif
+
              ENDIF
 
              ! Keep track of error boxes
@@ -1260,6 +1354,11 @@ CONTAINS
        ! calculated from the C array back into State_Chm%Species%Conc
        !=====================================================================
 
+              ! ewl debug
+       if (input_opt%amIRoot .and. (I == 1).and.(J==1).and.(L==1) ) then
+          print *, "ewl do_fullchem, F11: O1D(1,1,1) : ", State_Chm%Species(id_O1D)%Conc(1,1,1)
+       endif
+
        ! Loop over KPP species
        DO N = 1, NSPEC
 
@@ -1276,13 +1375,54 @@ CONTAINS
              ENDIF
           ENDIF
 
+          ! ewl debug
+          if (input_opt%amIRoot .and. (SpcID==id_O1D).and.(I == 1).and.(J==1).and.(L==1) ) then
+             print *, "ewl do_fullchem, F12: checking for negative, C(N_O1D): ", C(N_O1D)
+          endif
+
+
+          
           ! Set negative concentrations to zero
           C(N) = MAX( C(N), 0.0_dp )
 
+          ! ewl debug
+          if (input_opt%amIRoot .and. (SpcID==id_O1D).and.(I == 1).and.(J==1).and.(L==1) ) then
+             print *, "ewl do_fullchem, F13: after negative check, C(N_O1D): ", C(N_O1D)
+          endif
+
+          ! ewl debug
+          if (input_opt%amIRoot .and. (I == 1).and.(J==1).and.(L==1) ) spcconcbefore = State_Chm%Species(SpcID)%Conc(I,J,L)
+          
           ! Copy concentrations back into State_Chm%Species
           State_Chm%Species(SpcID)%Conc(I,J,L) = REAL( C(N), kind=fp )
 
+          ! ewl debug
+          if (input_opt%amIRoot .and. (I == 1).and.(J==1).and.(L==1) ) then
+             print *, "ewl: conc before, after assignment to C at grid box (1,1,1): ", N, State_Chm%SpcData(SpcId)%Info%Name, spcconcbefore, State_Chm%Species(SpcID)%Conc(1,1,1)
+          endif
        ENDDO
+
+       ! ewl debug
+       if (input_opt%amIRoot .and. (I == 1).and.(J==1).and.(L==1) ) then
+          print *, " "
+          print *, "ewl: reaction rates"
+          do S = 1, NREACT
+             print *, "ewl: rconst(n), equ: ", RCONST(S), TRIM(ADJUSTL(EQN_NAMES(S)))
+          enddo
+       endif
+
+       !              ! ewl debug
+       !if (input_opt%amIRoot .and. (I == 1).and.(J==1).and.(L==1) ) then
+       !   DO N = 1, NSPEC
+       !
+       !      ! GEOS-Chem species ID
+       !      SpcID = State_Chm%Map_KppSpc(N)
+       !      
+       !      ! Skip if this is not a GEOS-Chem species
+       !      IF ( SpcID <= 0 ) CYCLE
+       !      print *, "ewl do_fullchem, F14: Conc(1,1,1), N : ", State_Chm%Species(id_O3)%Conc(1,1,1)
+       !   ENDDO
+       !endif
 
 #ifdef TOMAS
        !-----------------------------------------------------------------
@@ -1477,6 +1617,13 @@ CONTAINS
     ENDDO
     !$OMP END PARALLEL DO
 
+    ! ewl debug
+    if (input_opt%amIRoot ) then
+       print *, "ewl do_fullchem, G: O1D(1,1,1) : ", State_Chm%Species(id_O1D)%Conc(1,1,1)
+    endif
+    
+
+    
     !=======================================================================
     ! Return gracefully if integration failed 2x anywhere
     ! (as we cannot break out of a parallel DO loop!)
@@ -1590,6 +1737,13 @@ CONTAINS
        RETURN
     ENDIF
 
+    ! ewl debug
+    if (input_opt%amIRoot ) then
+       print *, "ewl do_fullchem, H: O1D(1,1,1) : ", State_Chm%Species(id_O1D)%Conc(1,1,1)
+    endif
+    
+
+    
     !=======================================================================
     ! Apply high-altitude active nitrogen partitioning and H2SO4
     ! photolysis approximations outside the chemistry grid
@@ -1613,6 +1767,13 @@ CONTAINS
        State_Chm%JNO2(:,:) = State_Chm%Phot%ZPJ(1,State_Chm%Phot%RXN_NO2,:,:)
     ENDIF
 
+    ! ewl debug
+    if (input_opt%amIRoot ) then
+       print *, "ewl do_fullchem, I: O1D(1,1,1) : ", State_Chm%Species(id_O1D)%Conc(1,1,1)
+    endif
+    
+
+    
     ! Set FIRSTCHEM = .FALSE. -- we have gone thru one chem step
     FIRSTCHEM = .FALSE.
 
@@ -2696,6 +2857,7 @@ CONTAINS
     id_CH4      = Ind_( 'CH4', 'A'     ) ! CH4 advected species
     id_HO2      = Ind_( 'HO2'          )
     id_NH3      = Ind_( 'NH3'          )
+    id_O3       = Ind_( 'O3'           ) ! ewl debug
     id_O3P      = Ind_( 'O'            )
     id_O1D      = Ind_( 'O1D'          )
     id_OH       = Ind_( 'OH'           )
@@ -2814,7 +2976,7 @@ CONTAINS
     id_PSO4 = -1
     id_PCO  = -1
     id_LCH4 = -1
-
+    
     !--------------------------------------------------------------------
     ! Pre-store the KPP indices for each KPP prod/loss species or family
     !--------------------------------------------------------------------

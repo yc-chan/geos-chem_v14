@@ -123,6 +123,7 @@ CONTAINS
 !
     ! SAVEd scalars
     INTEGER, SAVE      :: id_DST1, id_NK01, id_CO2   ! Species ID flags
+    INTEGER, SAVE      :: id_O3, id_NO2, id_SALA   ! ewl debug
 
     ! Scalars
     INTEGER            :: N_TROP, N
@@ -157,6 +158,10 @@ CONTAINS
        id_DST1 = Ind_('DST1')
        id_NK01 = Ind_('NK01')
        id_CO2  = Ind_('CO2' )
+       ! ewl debug
+       id_O3   = Ind_('O3')
+       id_NO2  = Ind_('NO2')
+       id_SALA  = Ind_('SALA')
     ENDIF
 
     !========================================================================
@@ -224,6 +229,11 @@ CONTAINS
        RETURN
     ENDIF
 
+    ! ewl debug
+    if (input_opt%amIRoot ) then
+       print *, "ewl A: O3(1,1,1) : ", State_Chm%Species(id_O3)%Conc(1,1,1)
+    endif
+    
     !========================================================================
     ! If Input_Opt%LCHEM=T then call the chemistry subroutines
     !========================================================================
@@ -277,6 +287,12 @@ CONTAINS
 
           ENDIF
 
+    ! ewl debug
+    if (input_opt%amIRoot ) then
+       print *, "ewl: A1 -O3(1,1,1) : ", State_Chm%Species(id_O3)%Conc(1,1,1)
+    endif
+
+          
           !------------------------------------------------------------------
           ! Call RDAER
           !------------------------------------------------------------------
@@ -297,6 +313,11 @@ CONTAINS
              CALL GC_Error( ErrMsg, RC, ThisLoc )
              RETURN
           ENDIF
+
+              ! ewl debug
+    if (input_opt%amIRoot ) then
+       print *, "ewl: A2 -O3(1,1,1) : ", State_Chm%Species(id_O3)%Conc(1,1,1)
+    endif
 
           !==================================================================
           ! If LDUST is turned on, then we have online dust aerosol in
@@ -322,6 +343,11 @@ CONTAINS
              ENDIF
           ENDIF
 
+              ! ewl debug
+    if (input_opt%amIRoot ) then
+       print *, "ewl: A3 - O3(1,1,1) : ", State_Chm%Species(id_O3)%Conc(1,1,1)
+    endif
+
           !------------------------------------------------------------------
           ! Dry-run sulfate chem to get cloud pH
           !------------------------------------------------------------------
@@ -343,6 +369,10 @@ CONTAINS
                 RETURN
              ENDIF
 
+    ! ewl debug
+    if (input_opt%amIRoot ) then
+       print *, "ewl: A4 - O3(1,1,1) : ", State_Chm%Species(id_O3)%Conc(1,1,1)
+    endif
 
              !---------------------------------------------------------------
              ! Do aerosol thermodynamic equilibrium
@@ -405,6 +435,11 @@ CONTAINS
           ENDIF
 #endif
 
+              ! ewl debug
+    if (input_opt%amIRoot ) then
+       print *, "ewl: A5 -O3(1,1,1) : ", State_Chm%Species(id_O3)%Conc(1,1,1)
+    endif
+
           IF ( Input_Opt%useTimers ) THEN
              CALL Timer_End( "=> Aerosol chem", RC )
           ENDIF
@@ -430,6 +465,11 @@ CONTAINS
              CALL GC_Error( ErrMsg, RC, ThisLoc )
              RETURN
           ENDIF
+
+          ! ewl debug
+    if (input_opt%amIRoot ) then
+       print *, "ewl: A5 -O3(1,1,1) : ", State_Chm%Species(id_O3)%Conc(1,1,1)
+    endif
 
           ! Trap potential errors
           IF ( RC /= GC_SUCCESS ) THEN
@@ -463,6 +503,11 @@ CONTAINS
                 ErrMsg = 'Incorrect species units after DO_LINEARCHEM!'
                 CALL GC_Error( ErrMsg, RC, ThisLoc )
              ENDIF
+
+    ! ewl debug
+    if (input_opt%amIRoot ) then
+       print *, "ewl: A6 - O3(1,1,1) : ", State_Chm%Species(id_O3)%Conc(1,1,1)
+    endif
 
              ! Trap potential errors
              IF ( RC /= GC_SUCCESS ) THEN
@@ -522,6 +567,11 @@ CONTAINS
              ENDIF
           ENDIF
 
+          ! ewl debug
+    if (input_opt%amIRoot ) then
+       print *, "ewl: A7 - O3(1,1,1) : ", State_Chm%Species(id_O3)%Conc(1,1,1)
+    endif
+
           !------------------------------------------------------------------
           ! Recalculate PSC properties
           !------------------------------------------------------------------
@@ -557,6 +607,11 @@ CONTAINS
                 ErrMsg =  'Incorrect species units after CHEMSULFATE!'
                 CALL GC_Error( ErrMsg, RC, ThisLoc )
              ENDIF
+
+                 ! ewl debug
+    if (input_opt%amIRoot ) then
+       print *, "ewl: A8 - O3(1,1,1) : ", State_Chm%Species(id_O3)%Conc(1,1,1)
+    endif
 
              ! Trap potential errors
              IF ( RC /= GC_SUCCESS ) THEN
@@ -604,6 +659,11 @@ CONTAINS
                 RETURN
              ENDIF
           ENDIF
+
+              ! ewl debug
+    if (input_opt%amIRoot ) then
+       print *, "ewl: A9 - O3(1,1,1) : ", State_Chm%Species(id_O3)%Conc(1,1,1)
+    endif
 
 #ifdef APM
           !------------------------------------------------------------------
@@ -1073,6 +1133,11 @@ CONTAINS
 
     ENDIF
 
+        ! ewl debug
+    if (input_opt%amIRoot ) then
+       print *, "ewl: B - O3(1,1,1) : ", State_Chm%Species(id_O3)%Conc(1,1,1)
+    endif
+
     !========================================================================
     ! Convert species units back to original unit (ewl, 8/12/15)
     !========================================================================
@@ -1090,6 +1155,11 @@ CONTAINS
        CALL GC_Error( ErrMsg, RC, ThisLoc )
        RETURN
     ENDIF
+
+            ! ewl debug
+    if (input_opt%amIRoot ) then
+       print *, "ewl: C - O3(1,1,1) : ", State_Chm%Species(id_O3)%Conc(1,1,1)
+    endif
 
     !========================================================================
     ! Chemistry budget diagnostics - Part 2 of 2
@@ -1123,6 +1193,11 @@ CONTAINS
             colMass     = State_Diag%BudgetColumnMass,                       &
             timeStep    = DT_Chem,                                           &
             RC          = RC                                                )
+
+               ! ewl debug
+    if (input_opt%amIRoot ) then
+       print *, "ewl: D - O3(1,1,1) : ", State_Chm%Species(id_O3)%Conc(1,1,1)
+    endif
 
        ! Trap potential errors
        IF ( RC /= GC_SUCCESS ) THEN
