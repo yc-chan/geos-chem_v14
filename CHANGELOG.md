@@ -12,6 +12,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Fixed formatting error in `.github/workflows/stale.yml` that caused the Mark Stale Issues action not to run
 - Fixed typo `$GCAPVERTRESL` -> `$GCAPVERTRES` in `HEMCO_Config.rc.fullchem` template file
 
+### Added
+- Added number of levels with clouds for photolysis to geoschem_config.yml and Input_Opt to pass to Cloud-J
+
 ## [14.4.0] - 2024-05-30
 ### Added
 - Added `SpcConc%Units` for species-specific unit conversion
