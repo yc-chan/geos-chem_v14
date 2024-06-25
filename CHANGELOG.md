@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased] - TBD
 ### Changed
 - Alphabetically sort Complex SOA species into `geoschem_config.yml` in run directory creation
+- Updated `run/CESM` with alphabetical sorting of species in `geoschem_config.yml`
 
 ### Fixed
 - Fixed formatting error in `.github/workflows/stale.yml` that caused the Mark Stale Issues action not to run
@@ -15,11 +16,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ### Removed
 - Removed `BudgetWetDep*` entries from simulations with no soluble species in `HISTORY.rc` templates
+- Disabled `run/CESM` ParaNOx extension by default in `HEMCO_Config.rc`
+- Removed MPI broadcasts in CESM-only UCX code; MPI broadcast done at coupler level
 
 ### Added
 - Added initialization of PHOTDELTA in ucx_h2so4phot to avoid run-time error in CESM
-
-### Added
 - Added number of levels with clouds for photolysis to geoschem_config.yml and Input_Opt to pass to Cloud-J
 
 ## [14.4.0] - 2024-05-30
