@@ -19,6 +19,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Added
 - Added initialization of PHOTDELTA in ucx_h2so4phot to avoid run-time error in CESM
 
+### Added
+- Added number of levels with clouds for photolysis to geoschem_config.yml and Input_Opt to pass to Cloud-J
+
 ## [14.4.0] - 2024-05-30
 ### Added
 - Added `SpcConc%Units` for species-specific unit conversion
