@@ -19,6 +19,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - Fixed bug in # levels with cloud used in photolysis when using GCAP met or CESM
 - Fixed typos for `SatDiagnEdge` collection in `HISTORY.rc` templates
 - The `SatDiagnOH` diagnostic now works for the carbon simulation
+- Now use proper time refresh for CO2 fossil fuel scale factors in `ExtData.rc.carbon`
 
 ### Removed
 - Entry `SatDiagnPEDGE` from the `SatDiagn` collection; This needs to go into the `SatDiagnEdge` collection.
